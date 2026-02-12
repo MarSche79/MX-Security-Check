@@ -1,0 +1,25 @@
+{
+  "expo": {
+    "name": "MX Security Check",
+    "slug": "mx-security-check",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#0A0E27"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.mxsecuritycheck.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#0A0E27"
+      },
+      "package": "com.mxsecuritycheck.app"
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}

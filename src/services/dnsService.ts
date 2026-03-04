@@ -4,6 +4,8 @@
  * This avoids the need for native DNS modules.
  */
 
+import { EDRResult } from '../types';
+
 const DNS_API = 'https://cloudflare-dns.com/dns-query';
 
 interface DNSResponse {
@@ -317,4 +319,129 @@ export function parseDMARC(raw: string): {
     adkim: tags['adkim'],
     aspf: tags['aspf'],
   };
+}
+
+// ─── EDR Detection ──────────────────────────────────────────────────────────
+
+interface EDRProbe {
+  /** Subdomain prefix to prepend to the target domain */
+  subdomain: string;
+  /** DNS record types to check */
+  types: string[];
+  /** Pattern to match in the DNS answer data (case-insensitive) */
+  answerPatterns: string[];
+  vendor: {
+    name: string;
+    description: string;
+  };
+}
+
+const EDR_PROBES: EDRProbe[] = [
+  // CrowdStrike Falcon
+  {
+    subdomain: '_crowdstrike-falcon-agent',
+    types: ['CNAME', 'TXT'],
+    answerPatterns: ['crowdstrike.com', 'cloudsink.net'],
+    vendor: {
+      name: 'CrowdStrike Falcon',
+      description: 'CrowdStrike Falcon Endpoint Detection & Response',
+    },
+  },
+  {
+    subdomain: 'ts01-b.cloudsink.net',
+    types: ['A'],
+    answerPatterns: [],
+    vendor: {
+      name: 'CrowdStrike Falcon',
+      description: 'CrowdStrike Falcon Endpoint Detection & Response',
+    },
+  },
+  // SentinelOne
+  {
+    subdomain: '_sentinelone',
+    types: ['CNAME', 'TXT'],
+    answerPatterns: ['sentinelone.net', 's1cloud.net'],
+    vendor: {
+      name: 'SentinelOne',
+      description: 'SentinelOne Singularity Endpoint Detection & Response',
+    },
+  },
+  // Microsoft Defender for Endpoint
+  {
+    subdomain: '_mdatp',
+    types: ['CNAME', 'TXT'],
+    answerPatterns: ['wd.microsoft.com', 'security.microsoft.com', 'events.data.microsoft.com'],
+    vendor: {
+      name: 'Microsoft Defender for Endpoint',
+      description: 'Microsoft Defender for Endpoint (MDE) Detection & Response',
+    },
+  },
+  {
+    subdomain: '_mde',
+    types: ['CNAME', 'TXT'],
+    answerPatterns: ['wd.microsoft.com', 'security.microsoft.com', 'events.data.microsoft.com'],
+    vendor: {
+      name: 'Microsoft Defender for Endpoint',
+      description: 'Microsoft Defender for Endpoint (MDE) Detection & Response',
+    },
+  },
+];
+
+/**
+ * Check for EDR (Endpoint Detection & Response) indicators in DNS.
+ * Probes well-known EDR subdomains / CNAME patterns for the given domain.
+ */
+export async function lookupEDR(domain: string): Promise<EDRResult[]> {
+  const results: EDRResult[] = [];
+  const seen = new Set<string>();
+
+  const probePromises = EDR_PROBES.map(async (probe) => {
+    const fqdn = probe.subdomain.includes('.')
+      ? probe.subdomain // absolute hostname, not a subdomain of the domain
+      : `${probe.subdomain}.${domain}`;
+
+    for (const type of probe.types) {
+      const answers = await queryDNS(fqdn, type);
+      if (answers.length === 0) continue;
+
+      // If no answer patterns specified, any answer is a match (e.g. A-record existence check)
+      if (probe.answerPatterns.length === 0) {
+        if (!seen.has(probe.vendor.name)) {
+          seen.add(probe.vendor.name);
+          results.push({
+            vendor: {
+              name: probe.vendor.name,
+              type: 'edr',
+              description: probe.vendor.description,
+              confidence: 'medium',
+            },
+            indicator: `${fqdn} (${type} record found)`,
+          });
+        }
+        return;
+      }
+
+      // Check if any answer data matches expected patterns
+      for (const answer of answers) {
+        const data = answer.data.toLowerCase();
+        const matched = probe.answerPatterns.some((p) => data.includes(p));
+        if (matched && !seen.has(probe.vendor.name)) {
+          seen.add(probe.vendor.name);
+          results.push({
+            vendor: {
+              name: probe.vendor.name,
+              type: 'edr',
+              description: probe.vendor.description,
+              confidence: 'high',
+            },
+            indicator: `${fqdn} → ${answer.data.replace(/\.$/, '')}`,
+          });
+          return;
+        }
+      }
+    }
+  });
+
+  await Promise.all(probePromises);
+  return results;
 }

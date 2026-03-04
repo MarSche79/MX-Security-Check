@@ -355,17 +355,17 @@ export const MX_VENDOR_PATTERNS: VendorPattern[] = [
       confidence: 'high',
     },
   },
-
-  // ── Email Hosting / SMTP Gateways ────────────────────────────────────
   {
     pattern: 'mail.protection.outlook.com',
     vendor: {
-      name: 'Microsoft 365',
-      type: 'email-hosting',
-      description: 'Microsoft 365 Exchange Online Protection',
+      name: 'Microsoft Exchange Online Protection',
+      type: 'security-gateway',
+      description: 'Microsoft Exchange Online Protection (EOP) Security Gateway',
       confidence: 'high',
     },
   },
+
+  // ── Email Hosting / SMTP Gateways ────────────────────────────────────
   {
     pattern: 'outlook.com',
     vendor: {
@@ -1142,6 +1142,8 @@ export function getVendorTypeLabel(type: VendorInfo['type']): string {
       return 'SMTP Relay';
     case 'email-service':
       return 'Email Service';
+    case 'edr':
+      return 'Endpoint Detection & Response';
     default:
       return 'Unknown';
   }
@@ -1160,6 +1162,8 @@ export function getVendorTypeColor(type: VendorInfo['type']): string {
       return '#06B6D4';
     case 'email-service':
       return '#F59E0B';
+    case 'edr':
+      return '#10B981';
     default:
       return '#64748B';
   }

@@ -15,12 +15,14 @@ import {
   DMARCRecord,
   ScanResult,
   VendorInfo,
+  EDRResult,
 } from '../types';
 import {
   lookupMX,
   lookupSPF,
   lookupDMARC,
   lookupAllDKIM,
+  lookupEDR,
   parseSPF,
   parseDMARC,
 } from '../services/dnsService';
@@ -40,7 +42,8 @@ export function calculateSecurityScore(
   spf: SPFRecord | null,
   dkim: DKIMRecord[],
   dmarc: DMARCRecord | null,
-  securityVendors: VendorInfo[]
+  securityVendors: VendorInfo[],
+  edr: EDRResult[] = []
 ): SecurityScore {
   const details: ScoreDetail[] = [];
   let totalPoints = 0;
@@ -225,6 +228,30 @@ export function calculateSecurityScore(
     });
   }
 
+  // ── EDR / Endpoint Protection (10 points) ─────────────────────────
+  const edrMax = 10;
+  maxPoints += edrMax;
+  if (edr.length > 0) {
+    totalPoints += edrMax;
+    details.push({
+      category: 'Endpoint Detection & Response',
+      points: edrMax,
+      maxPoints: edrMax,
+      status: 'pass',
+      message: `EDR detected: ${edr.map((e) => e.vendor.name).join(', ')}`,
+      icon: '🛡️',
+    });
+  } else {
+    details.push({
+      category: 'Endpoint Detection & Response',
+      points: 0,
+      maxPoints: edrMax,
+      status: 'warn',
+      message: 'No EDR DNS indicators found (CrowdStrike, SentinelOne, Microsoft Defender)',
+      icon: '🛡️',
+    });
+  }
+
   // ── Calculate Grade ───────────────────────────────────────────────
   const percentage = maxPoints > 0 ? Math.round((totalPoints / maxPoints) * 100) : 0;
   const { grade, gradeColor } = getGrade(percentage);
@@ -257,7 +284,7 @@ export async function runFullScan(domain: string): Promise<ScanResult> {
   const cleanDomain = domain.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
 
   // ── Run all DNS lookups concurrently ──────────────────────────────
-  const [mxRaw, spfRaw, dmarcRaw, dkimResults] = await Promise.all([
+  const [mxRaw, spfRaw, dmarcRaw, dkimResults, edrResults] = await Promise.all([
     lookupMX(cleanDomain).catch((e) => {
       errors.push(`MX lookup failed: ${e.message}`);
       return [] as { priority: number; exchange: string }[];
@@ -273,6 +300,10 @@ export async function runFullScan(domain: string): Promise<ScanResult> {
     lookupAllDKIM(cleanDomain).catch((e) => {
       errors.push(`DKIM lookup failed: ${e.message}`);
       return [] as { selector: string; raw: string; found: boolean }[];
+    }),
+    lookupEDR(cleanDomain).catch((e) => {
+      errors.push(`EDR lookup failed: ${e.message}`);
+      return [] as EDRResult[];
     }),
   ]);
 
@@ -323,7 +354,8 @@ export async function runFullScan(domain: string): Promise<ScanResult> {
     spf,
     dkim,
     dmarc,
-    securityVendors
+    securityVendors,
+    edrResults
   );
 
   return {
@@ -337,6 +369,7 @@ export async function runFullScan(domain: string): Promise<ScanResult> {
     vendors: allVendors,
     smtpGateway,
     securityVendors,
+    edr: edrResults,
     errors,
   };
 }

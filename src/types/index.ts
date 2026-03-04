@@ -31,7 +31,7 @@ export interface DMARCRecord {
 
 export interface VendorInfo {
   name: string;
-  type: 'security-gateway' | 'email-hosting' | 'smtp-relay' | 'email-service';
+  type: 'security-gateway' | 'email-hosting' | 'smtp-relay' | 'email-service' | 'edr';
   description?: string;
   confidence: 'high' | 'medium' | 'low';
 }
@@ -52,6 +52,11 @@ export interface ScoreDetail {
   icon: string;
 }
 
+export interface EDRResult {
+  vendor: VendorInfo;
+  indicator: string;
+}
+
 export interface ScanResult {
   domain: string;
   timestamp: Date;
@@ -63,6 +68,7 @@ export interface ScanResult {
   vendors: VendorInfo[];
   smtpGateway: VendorInfo | null;
   securityVendors: VendorInfo[];
+  edr: EDRResult[];
   errors: string[];
 }
 

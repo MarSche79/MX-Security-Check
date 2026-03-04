@@ -1,0 +1,37 @@
+name: Sync Upstream
+
+on:
+  schedule:
+    - cron: "0 6 * * *" # Daily at 06:00 UTC
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Sync upstream
+        run: |
+          git remote add upstream https://github.com/Xiphodeus01/MX-Security-Check.git
+          git fetch upstream master
+
+          # Check if there are new commits
+          if [ "$(git rev-list HEAD..upstream/master --count)" -eq 0 ]; then
+            echo "Already up to date."
+            exit 0
+          fi
+
+          echo "New upstream commits found, merging..."
+          git merge upstream/master --no-edit -X ours
+          git push origin master

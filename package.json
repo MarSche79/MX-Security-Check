@@ -6,7 +6,9 @@
     "start": "npx expo start",
     "android": "npx expo start --android",
     "ios": "npx expo start --ios",
-    "web": "npx expo start --web"
+    "web": "npx expo start --web",
+    "build:web": "npx expo export --platform web && node -e \"require('fs').copyFileSync('staticwebapp.config.json','dist/staticwebapp.config.json')\"",
+    "predeploy": "npm run build:web"
   },
   "dependencies": {
     "@expo/metro-runtime": "~3.2.3",

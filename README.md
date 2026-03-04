@@ -62,6 +62,10 @@ MX Security check/
 ├── package.json                     # Dependencies
 ├── tsconfig.json                    # TypeScript config
 ├── babel.config.js                  # Babel config
+├── staticwebapp.config.json         # Azure SWA config (routing, headers)
+├── .github/
+│   └── workflows/
+│       └── azure-static-web-apps.yml # CI/CD pipeline
 └── src/
     ├── theme/
     │   └── colors.ts                # Color palette & shadows
@@ -122,3 +126,38 @@ Mailchimp, HubSpot, Salesforce, Marketo, Zendesk, Freshdesk, Help Scout, Interco
 - **react-native-svg** for the score gauge
 - **expo-linear-gradient** for UI gradients
 - **Cloudflare DNS-over-HTTPS** for DNS resolution
+
+## Deploy to Azure Static Web Apps
+
+This project is ready for continuous deployment from GitHub to **Azure Static Web Apps**.
+
+### Quick Setup
+
+1. **Push this repo to GitHub**
+2. **Create an Azure Static Web App** in the [Azure Portal](https://portal.azure.com):
+   - Go to **Create a resource** → **Static Web App**
+   - Select your GitHub repo and branch (`main`)
+   - Under build details, choose **Custom** and leave the fields empty (the workflow handles everything)
+   - Click **Create** — Azure will generate a deployment token
+3. **Add the deployment token** as a GitHub secret:
+   - Go to your repo → **Settings** → **Secrets and variables** → **Actions**
+   - Create a new secret named `AZURE_STATIC_WEB_APPS_API_TOKEN`
+   - Paste the token from the Azure portal
+4. **Push or merge to `main`** — The GitHub Actions workflow at `.github/workflows/azure-static-web-apps.yml` will automatically build and deploy the app
+
+### Build Locally
+
+```bash
+# Build the static web app
+npm run build:web
+
+# Output is in the dist/ folder
+```
+
+### What's Included
+
+| File | Purpose |
+|------|---------|
+| `.github/workflows/azure-static-web-apps.yml` | CI/CD pipeline for Azure SWA |
+| `staticwebapp.config.json` | SPA routing, security headers, MIME types |
+| `build:web` script | Builds the Expo app for static web hosting |

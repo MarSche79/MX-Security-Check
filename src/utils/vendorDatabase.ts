@@ -1142,6 +1142,8 @@ export function getVendorTypeLabel(type: VendorInfo['type']): string {
       return 'SMTP Relay';
     case 'email-service':
       return 'Email Service';
+    case 'edr':
+      return 'Endpoint Detection & Response';
     default:
       return 'Unknown';
   }
@@ -1160,6 +1162,8 @@ export function getVendorTypeColor(type: VendorInfo['type']): string {
       return '#06B6D4';
     case 'email-service':
       return '#F59E0B';
+    case 'edr':
+      return '#10B981';
     default:
       return '#64748B';
   }

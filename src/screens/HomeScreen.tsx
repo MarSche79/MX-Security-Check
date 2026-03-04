@@ -223,6 +223,40 @@ export default function HomeScreen() {
               )}
             </ResultCard>
 
+            {/* EDR / Endpoint Protection */}
+            <ResultCard
+              title="Endpoint Detection & Response"
+              icon="🔎"
+              status={result.edr.length > 0 ? 'pass' : 'warn'}
+              subtitle={
+                result.edr.length > 0
+                  ? `${result.edr.length} detected`
+                  : 'None detected'
+              }
+              defaultExpanded={true}
+            >
+              {result.edr.length > 0 ? (
+                <View>
+                  <VendorList vendors={result.edr.map((e) => e.vendor)} />
+                  {result.edr.map((e, i) => (
+                    <Text key={i} style={styles.hint}>
+                      Indicator: {e.indicator}
+                    </Text>
+                  ))}
+                </View>
+              ) : (
+                <View>
+                  <Text style={styles.noData}>
+                    No EDR DNS indicators detected
+                  </Text>
+                  <Text style={styles.hint}>
+                    Checked for CrowdStrike Falcon, SentinelOne, and
+                    Microsoft Defender for Endpoint DNS records
+                  </Text>
+                </View>
+              )}
+            </ResultCard>
+
             {/* MX Records */}
             <ResultCard
               title="MX Records"
@@ -551,6 +585,7 @@ export default function HomeScreen() {
                 { icon: '🔑', label: 'DKIM Probing', desc: 'Signature verification' },
                 { icon: '🔒', label: 'DMARC Policy', desc: 'Anti-spoofing rules' },
                 { icon: '🏰', label: 'Security Vendors', desc: 'Gateway identification' },
+                { icon: '🔎', label: 'EDR Detection', desc: 'Endpoint protection check' },
                 { icon: '🚀', label: 'SMTP Gateway', desc: 'Provider detection' },
               ].map((feature, i) => (
                 <View key={i} style={styles.featureItem}>

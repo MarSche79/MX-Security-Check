@@ -35,7 +35,7 @@ jobs:
       - name: Deploy to Azure Static Web Apps
         uses: Azure/static-web-apps-deploy@v1
         with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_POLITE_FLOWER_0B2591A03 }}
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_SALMON_BEACH_0B9CA7D03 }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: upload
           # Point directly to the pre-built output folder
@@ -52,5 +52,5 @@ jobs:
       - name: Close staging environment
         uses: Azure/static-web-apps-deploy@v1
         with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_POLITE_FLOWER_0B2591A03 }}
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_SALMON_BEACH_0B9CA7D03 }}
           action: close

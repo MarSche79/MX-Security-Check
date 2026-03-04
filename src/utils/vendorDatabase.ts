@@ -355,17 +355,17 @@ export const MX_VENDOR_PATTERNS: VendorPattern[] = [
       confidence: 'high',
     },
   },
-
-  // ── Email Hosting / SMTP Gateways ────────────────────────────────────
   {
     pattern: 'mail.protection.outlook.com',
     vendor: {
-      name: 'Microsoft 365',
-      type: 'email-hosting',
-      description: 'Microsoft 365 Exchange Online Protection',
+      name: 'Microsoft Exchange Online Protection',
+      type: 'security-gateway',
+      description: 'Microsoft Exchange Online Protection (EOP) Security Gateway',
       confidence: 'high',
     },
   },
+
+  // ── Email Hosting / SMTP Gateways ────────────────────────────────────
   {
     pattern: 'outlook.com',
     vendor: {
